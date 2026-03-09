@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Pages Annotation Tool V1</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>NPUST AOI Lab Label System</h1>
+    </header>
+    <aside class="sidebar">
+      <div class="mode-selector">
+        <select id="modeSelect">
+          <option value="annotation">Feature Annotation</option>
+          <option value="video">Ultrasound Video to Images</option>
+          <option value="settings">Settings</option>
+        </select>
+      </div>
+      <div id="annotationMode" class="mode-content">
+        <section class="panel">
+          <h2>Data Source</h2>
+          <label class="file-label">
+            <input id="folderInput" type="file" accept="image/*" webkitdirectory multiple />
+            Select Image Folder
+          </label>
+          <div class="hint">Images are not uploaded, only read and cached locally in the browser.</div>
+        </section>
+
+        <section class="panel">
+          <h2>Load Labels</h2>
+          <label class="file-label">
+            <input id="labelInput" type="file" accept=".txt" webkitdirectory multiple />
+            Select Labels Folder
+          </label>
+          <div class="hint">Select a folder containing .txt label files to load existing annotations.</div>
+        </section>
+
+        <section class="panel">
+          <div class="row-between">
+            <h2>Classes</h2>
+            <button id="addClassBtn" class="small-btn">+</button>
+          </div>
+          <div id="classList" class="class-list"></div>
+          <div class="hint">Click on a class to switch. Marked areas will display the class name and color.</div>
+        </section>
+
+        <section class="panel">
+          <div class="row-between">
+            <h2>Image List</h2>
+            <span id="imageCount" class="muted">0 images</span>
+          </div>
+          <input id="searchInput" type="text" placeholder="Search filename..." />
+          <ul id="imageList" class="image-list"></ul>
+        </section>
+
+        <section class="panel">
+          <h2>Instructions</h2>
+          <div class="hint">
+            1. Select a folder on the left<br>
+            2. Hold left mouse button and draw freely on the image<br>
+            3. Release to auto-close into polygon<br>
+            4. Automatically save to browser local when switching images
+          </div>
+        </section>
+      </div>
+      <div id="videoMode" class="mode-content" style="display: none;">
+        <section class="panel">
+          <h2>Video to Images</h2>
+          <label class="file-label">
+            <input id="videoInput" type="file" accept="video/*" />
+            Select Ultrasound Video
+          </label>
+          <div class="hint">Select a video file to convert to images.</div>
+        </section>
+
+        <section class="panel">
+          <h2>Frame Settings</h2>
+          <label>Frame Interval: <input id="frameInterval" type="number" value="30" min="1" /></label>
+          <button id="convertBtn" class="success">Convert to Images</button>
+          <div id="conversionStatus"></div>
+        </section>
+      </div>
+      <div id="settingsMode" class="mode-content" style="display: none;">
+        <section class="panel">
+          <h2>Settings</h2>
+          <div class="hint">Settings panel. Add your settings here.</div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="toolbar">
+        <button id="prevBtn"><</button>
+        <button id="nextBtn">></button>
+        <button id="undoBtn">Undo</button>
+        <button id="clearBtn" class="danger">Clear Image</button>
+        <button id="exportCurrentBtn" class="success">Export txt label</button>
+        <input id="zipNameInput" type="text" placeholder="Zip filename (default: date-time)" />
+        <button id="exportAllBtn" class="success">Export Zip</button>
+        <span id="currentInfo" class="current-info">No image loaded</span>
+      </header>
+
+      <section class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+        <div id="emptyHint" class="empty-hint">Please select an image folder first</div>
+      </section>
+    </main>
+  </div>
+
+  <div id="contextMenu" class="context-menu" style="display: none;">
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
