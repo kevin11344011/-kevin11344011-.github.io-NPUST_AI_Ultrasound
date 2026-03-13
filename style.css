@@ -59,7 +59,7 @@ button:hover, .file-label:hover { filter: brightness(1.08); }
 }
 .context-menu button {
   background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 5px;
-  padding: 5px 10px; cursor: pointer;
+  padding: 5px 10px; cursor: pointer; min-width: 50px;
 }
 .context-menu button:hover { background: var(--blue); color: white; }
 @media (max-width: 980px) {
