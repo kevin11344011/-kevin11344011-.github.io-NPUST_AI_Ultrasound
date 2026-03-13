@@ -10,7 +10,6 @@ html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: 
 .sidebar { overflow: auto; border-right: 1px solid var(--border); background: #15191e; padding: 16px; }
 .mode-selector { margin-bottom: 16px; }
 .mode-selector select { width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 12px; }
-.mode-content { }
 .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
 h2 { margin: 0 0 10px 0; font-size: 18px; }
 .file-label, input, button { width: 100%; }
@@ -55,11 +54,16 @@ button:hover, .file-label:hover { filter: brightness(1.08); }
 }
 .context-menu {
   position: absolute; background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 5px; 
+  padding: 8px; z-index: 1000; display: flex; flex-direction: column; gap: 4px;
+  min-width: 120px; max-width: 160px; /* constrain width */
 }
+
 .context-menu button {
   background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 5px;
-  padding: 5px 10px; cursor: pointer; min-width: 50px;
+  padding: 4px 8px; cursor: pointer;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .context-menu button:hover { background: var(--blue); color: white; }
 @media (max-width: 980px) {
