@@ -15,84 +15,122 @@
     <aside class="sidebar">
       <div class="mode-selector">
         <select id="modeSelect">
-          <option value="annotation">Feature Annotation</option>
-          <option value="video">Ultrasound Video to Images</option>
+          <option value="annotation">Annotation</option>
+          <option value="video">Video to Images(developing...)</option>
           <option value="settings">Settings</option>
         </select>
       </div>
       <div id="annotationMode" class="mode-content">
-        <section class="panel">
-          <h2>Data Source</h2>
-          <label class="file-label">
-            <input id="folderInput" type="file" accept="image/*" webkitdirectory multiple />
-            Select Image Folder
-          </label>
-          <div class="hint">Images are not uploaded, only read and cached locally in the browser.</div>
-        </section>
-
-        <section class="panel">
-          <h2>Load Labels</h2>
-          <label class="file-label">
-            <input id="labelInput" type="file" accept=".txt" webkitdirectory multiple />
-            Select Labels Folder
-          </label>
-          <div class="hint">Select a folder containing .txt label files to load existing annotations.</div>
-        </section>
-
-        <section class="panel">
-          <div class="row-between">
-            <h2>Classes</h2>
-            <button id="addClassBtn" class="small-btn">+</button>
+        <section class="panel collapsible-panel" data-collapsible>
+          <button class="panel-toggle" type="button" aria-expanded="true">
+            <span class="panel-title-text">Data Source</span>
+            <span class="panel-toggle-icon" aria-hidden="true">-</span>
+          </button>
+          <div class="panel-body">
+            <div class="stack">
+              <label class="file-label">
+                <input id="folderInput" type="file" accept="image/*" webkitdirectory multiple />
+                Select Image Folder
+              </label>
+              <label class="file-label secondary-file-label">
+                <input id="labelInput" type="file" accept=".txt" webkitdirectory multiple />
+                Select Labels Folder
+              </label>
+            </div>
           </div>
-          <div id="classList" class="class-list"></div>
-          <div class="hint">Click on a class to switch. Marked areas will display the class name and color.</div>
         </section>
 
-        <section class="panel">
+        <section class="panel collapsible-panel" data-collapsible>
           <div class="row-between">
-            <h2>Image List</h2>
+            <button class="panel-toggle" type="button" aria-expanded="true">
+              <span class="panel-title-text">Classes</span>
+              <span class="panel-toggle-icon" aria-hidden="true">-</span>
+            </button>
+          </div>
+          <div class="panel-body">
+            <div id="classList" class="class-list"></div>
+            <button id="addClassBtn" class="small-btn class-add-btn">+</button>
+          </div>
+        </section>
+
+        <section class="panel collapsible-panel" data-collapsible>
+          <div class="row-between">
+            <button class="panel-toggle" type="button" aria-expanded="true">
+              <span class="panel-title-text">Image List</span>
+              <span class="panel-toggle-icon" aria-hidden="true">-</span>
+            </button>
             <span id="imageCount" class="muted">0 images</span>
           </div>
-          <input id="searchInput" type="text" placeholder="Search filename..." />
-          <ul id="imageList" class="image-list"></ul>
-        </section>
-
-        <section class="panel">
-          <h2>Instructions</h2>
-          <div class="hint">
-            1. Select a folder on the left<br>
-            2. Hold left mouse button and draw freely on the image<br>
-            3. Release to auto-close into polygon<br>
-            4. Automatically save to browser local when switching images
+          <div class="panel-body">
+            <input id="searchInput" type="text" placeholder="Search filename..." />
+            <ul id="imageList" class="image-list"></ul>
           </div>
         </section>
       </div>
       <div id="videoMode" class="mode-content" style="display: none;">
-        <section class="panel">
-          <h2>Video to Images</h2>
-          <label class="file-label">
-            <input id="videoInput" type="file" accept="video/*" />
-            Select Ultrasound Video
-          </label>
-          <div class="hint">Select a video file to convert to images.</div>
+        <section class="panel collapsible-panel" data-collapsible>
+          <button class="panel-toggle" type="button" aria-expanded="true">
+            <span class="panel-title-text">Video to Images</span>
+            <span class="panel-toggle-icon" aria-hidden="true">-</span>
+          </button>
+          <div class="panel-body">
+            <label class="file-label">
+              <input id="videoInput" type="file" accept="video/*" />
+              Select Ultrasound Video
+            </label>
+            <div class="hint">Select a video file to convert to images.</div>
+          </div>
         </section>
 
-        <section class="panel">
-          <h2>Frame Settings</h2>
-          <label>Frame Interval: <input id="frameInterval" type="number" value="30" min="1" /></label>
-          <button id="convertBtn" class="success">Convert to Images</button>
-          <div id="conversionStatus"></div>
+        <section class="panel collapsible-panel" data-collapsible>
+          <button class="panel-toggle" type="button" aria-expanded="true">
+            <span class="panel-title-text">Frame Settings</span>
+            <span class="panel-toggle-icon" aria-hidden="true">-</span>
+          </button>
+          <div class="panel-body">
+            <div class="field-group">
+              <label for="frameInterval">Frame Interval</label>
+              <input id="frameInterval" type="number" value="30" min="1" />
+            </div>
+            <div class="field-group">
+              <label for="videoFpsInput">Video FPS</label>
+              <input id="videoFpsInput" type="number" value="30" min="1" step="0.01" />
+            </div>
+            <button id="convertBtn" class="success">Convert to PNG Frames</button>
+            <button id="exportFramesBtn">Export PNG Zip</button>
+            <div id="conversionStatus" class="hint"></div>
+          </div>
+        </section>
+
+        <section class="panel collapsible-panel" data-collapsible>
+          <button class="panel-toggle" type="button" aria-expanded="true">
+            <span class="panel-title-text">FFmpeg Fallback</span>
+            <span class="panel-toggle-icon" aria-hidden="true">-</span>
+          </button>
+          <div class="panel-body">
+            <div class="hint">
+              If the browser cannot load the selected video, convert it to a browser-ready H.264 MP4 first.<br />
+              Script: <code>scripts/convert-video-for-browser.ps1</code><br />
+              Example:<br />
+              <code>powershell -ExecutionPolicy Bypass -File .\scripts\convert-video-for-browser.ps1 -InputPath ".\Right wrist\0000007_Quick_ID___20250926_170446.mp4"</code>
+            </div>
+          </div>
         </section>
       </div>
       <div id="settingsMode" class="mode-content" style="display: none;">
-        <section class="panel">
-          <h2>Settings</h2>
-          <div class="hint">Settings panel. Add your settings here.</div>
+        <section class="panel collapsible-panel" data-collapsible>
+          <button class="panel-toggle" type="button" aria-expanded="true">
+            <span class="panel-title-text">Settings</span>
+            <span class="panel-toggle-icon" aria-hidden="true">-</span>
+          </button>
+          <div class="panel-body">
+            <div class="hint">Settings panel. Add your settings here.</div>
+          </div>
         </section>
       </div>
     </aside>
 
-    <main class="main">
+    <main id="annotationMain" class="main">
       <header class="toolbar">
         <button id="prevBtn">&lt;</button>
         <button id="nextBtn">&gt;</button>
@@ -107,6 +145,84 @@
       <section class="canvas-wrap">
         <canvas id="canvas"></canvas>
         <div id="emptyHint" class="empty-hint">Please select an image folder first</div>
+      </section>
+    </main>
+
+    <main id="videoMain" class="video-main" style="display: none;">
+      <section class="video-pane">
+        <div class="video-pane-header">
+          <div>
+            <h2>Video Preview</h2>
+            <div id="videoMeta" class="hint">Please select a video first</div>
+          </div>
+          <button id="playPauseBtn" class="small-btn" type="button">Play</button>
+        </div>
+        <div class="video-stage">
+          <video id="videoPreview" playsinline preload="metadata"></video>
+        </div>
+        <div class="video-controls">
+          <input id="videoSeek" type="range" min="0" max="0" step="0.001" value="0" />
+          <div id="videoTimeLabel" class="muted">00:00.000 / 00:00.000</div>
+        </div>
+      </section>
+
+      <section class="video-pane">
+        <div class="video-pane-header">
+          <div>
+            <h2>PNG Frames Preview</h2>
+            <div id="frameSummary" class="hint">No frames generated yet</div>
+          </div>
+        </div>
+        <div class="video-stage frame-stage">
+          <img id="framePreview" alt="Converted frame preview" />
+          <div id="frameEmptyHint" class="empty-hint">Convert the video to preview extracted PNG frames</div>
+        </div>
+        <div class="video-controls">
+          <input id="frameSeek" type="range" min="0" max="0" step="1" value="0" disabled />
+          <div id="frameInfo" class="muted">No frame selected</div>
+        </div>
+      </section>
+    </main>
+
+    <main id="settingsMain" class="settings-main" style="display: none;">
+      <section class="settings-hero">
+        <div>
+          <h2>Workspace Settings</h2>
+          <p class="hint">Adjust the annotation interface and choose how labels are exported.</p>
+        </div>
+      </section>
+
+      <section class="settings-grid">
+        <article class="settings-card">
+          <h3>Display</h3>
+          <div class="field-group">
+            <label for="fontSizeInput">Font Size</label>
+            <input id="fontSizeInput" type="range" min="12" max="22" step="1" value="16" />
+            <div id="fontSizeValue" class="muted">16 px</div>
+          </div>
+          <div class="field-group">
+            <label for="sidebarWidthInput">Sidebar Width Ratio</label>
+            <input id="sidebarWidthInput" type="range" min="260" max="520" step="10" value="360" />
+            <div id="sidebarWidthValue" class="muted">360 px</div>
+          </div>
+        </article>
+
+        <article class="settings-card">
+          <h3>Export</h3>
+          <div class="field-group">
+            <label for="labelFormatSelect">Label Save Format</label>
+            <select id="labelFormatSelect">
+              <option value="yolo">YOLO (.txt)</option>
+              <option value="json">JSON (.json)</option>
+            </select>
+          </div>
+          <div id="labelFormatHint" class="hint">YOLO exports one `.txt` file per image using normalized polygon points.</div>
+        </article>
+
+        <article class="settings-card">
+          <h3>Preview</h3>
+          <div id="settingsSummary" class="settings-summary"></div>
+        </article>
       </section>
     </main>
   </div>
