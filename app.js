@@ -91,6 +91,9 @@ let loadedVideoUrl = null;
 let extractedFrames = [];
 let currentFrameIndex = -1;
 let isConvertingVideo = false;
+let ffmpegInstance = null;
+let ffmpegLoadPromise = null;
+let ffmpegReady = false;
 
 function updateModeLayout(mode) {
   annotationMode.style.display = mode === "annotation" ? "block" : "none";
@@ -166,6 +169,41 @@ function getMediaErrorMessage(mediaError) {
   if (mediaError.code === 3) return "The video could not be decoded. This is often a codec issue.";
   if (mediaError.code === 4) return "This video format or codec is not supported by the browser.";
   return "Unknown media error.";
+}
+async function toBlobUrl(url, mimeType) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Unable to fetch ffmpeg asset: ${url}`);
+  }
+  const blob = await response.blob();
+  return URL.createObjectURL(new Blob([blob], { type: mimeType }));
+}
+async function loadFfmpeg() {
+  if (ffmpegReady && ffmpegInstance) return ffmpegInstance;
+  if (ffmpegLoadPromise) return ffmpegLoadPromise;
+  if (!window.FFmpegWASM || !window.FFmpegWASM.FFmpeg) {
+    throw new Error("ffmpeg.wasm loader is unavailable.");
+  }
+  ffmpegLoadPromise = (async () => {
+    const baseUrl = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd";
+    const ffmpeg = new window.FFmpegWASM.FFmpeg();
+    ffmpeg.on("progress", ({ progress }) => {
+      if (isConvertingVideo) {
+        conversionStatus.textContent = `Converting with ffmpeg.wasm... ${Math.round((progress || 0) * 100)}%`;
+      }
+    });
+    const coreURL = await toBlobUrl(`${baseUrl}/ffmpeg-core.js`, "text/javascript");
+    const wasmURL = await toBlobUrl(`${baseUrl}/ffmpeg-core.wasm`, "application/wasm");
+    await ffmpeg.load({ coreURL, wasmURL });
+    ffmpegInstance = ffmpeg;
+    ffmpegReady = true;
+    return ffmpeg;
+  })();
+  try {
+    return await ffmpegLoadPromise;
+  } finally {
+    ffmpegLoadPromise = null;
+  }
 }
 function revokeLoadedVideoUrl() {
   if (!loadedVideoUrl) return;
@@ -321,6 +359,50 @@ async function extractFramesFromVideo(file, frameStep, fps) {
     return nextFrames;
   } finally {
     URL.revokeObjectURL(workerUrl);
+  }
+}
+async function extractFramesWithFfmpeg(file, frameStep, fps) {
+  const ffmpeg = await loadFfmpeg();
+  const frameRate = fps / frameStep;
+  if (!Number.isFinite(frameRate) || frameRate <= 0) {
+    throw new Error("Unable to compute ffmpeg frame extraction rate.");
+  }
+  const inputName = `input_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const outputPattern = "frame_%06d.png";
+  const fileData = new Uint8Array(await file.arrayBuffer());
+  conversionStatus.textContent = "Loading video into ffmpeg.wasm...";
+  await ffmpeg.writeFile(inputName, fileData);
+  try {
+    await ffmpeg.exec([
+      "-i", inputName,
+      "-vf", `fps=${frameRate}`,
+      outputPattern,
+    ]);
+    const entries = await ffmpeg.listDir("/");
+    const outputFiles = entries
+      .filter((entry) => entry.isDir === false && /^frame_\d+\.png$/i.test(entry.name))
+      .sort((a, b) => a.name.localeCompare(b.name, "en"));
+    if (!outputFiles.length) {
+      throw new Error("ffmpeg.wasm did not generate any PNG frames.");
+    }
+    const baseName = fileBaseName(file);
+    const frames = [];
+    for (let i = 0; i < outputFiles.length; i++) {
+      const entry = outputFiles[i];
+      const data = await ffmpeg.readFile(entry.name);
+      const blob = new Blob([data.buffer], { type: "image/png" });
+      frames.push({
+        name: `${baseName}_${entry.name}`,
+        time: i / frameRate,
+        frameNumber: i * frameStep,
+        blob,
+        url: URL.createObjectURL(blob),
+      });
+      await ffmpeg.deleteFile(entry.name);
+    }
+    return frames;
+  } finally {
+    await ffmpeg.deleteFile(inputName).catch(() => {});
   }
 }
 
@@ -981,14 +1063,25 @@ convertBtn.addEventListener("click", async () => {
   exportFramesBtn.disabled = true;
   try {
     clearExtractedFrames();
-    const nextFrames = await extractFramesFromVideo(loadedVideoFile, interval, fps);
+    let nextFrames;
+    let usedFfmpegFallback = false;
+    try {
+      conversionStatus.textContent = "Converting with browser decoder...";
+      nextFrames = await extractFramesFromVideo(loadedVideoFile, interval, fps);
+    } catch (nativeError) {
+      usedFfmpegFallback = true;
+      conversionStatus.textContent = "Browser decoding failed. Switching to ffmpeg.wasm fallback...";
+      nextFrames = await extractFramesWithFfmpeg(loadedVideoFile, interval, fps);
+    }
     extractedFrames = nextFrames;
     frameSeek.max = String(Math.max(extractedFrames.length - 1, 0));
     frameSeek.disabled = extractedFrames.length === 0;
     frameSummary.textContent = `${extractedFrames.length} PNG frames generated | every ${interval} frames @ ${fps} FPS`;
     renderFramePreview(0);
     exportFramesBtn.disabled = extractedFrames.length === 0;
-    conversionStatus.textContent = `Conversion completed. ${extractedFrames.length} PNG frames generated.`;
+    conversionStatus.textContent = usedFfmpegFallback
+      ? `Conversion completed with ffmpeg.wasm fallback. ${extractedFrames.length} PNG frames generated.`
+      : `Conversion completed with browser decoder. ${extractedFrames.length} PNG frames generated.`;
   } catch (error) {
     clearExtractedFrames();
     conversionStatus.textContent = error.message || "Failed to convert the video.";
