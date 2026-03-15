@@ -109,10 +109,8 @@
           </button>
           <div class="panel-body">
             <div class="hint">
-              If the browser cannot load the selected video, convert it to a browser-ready H.264 MP4 first.<br />
-              Script: <code>scripts/convert-video-for-browser.ps1</code><br />
-              Example:<br />
-              <code>powershell -ExecutionPolicy Bypass -File .\scripts\convert-video-for-browser.ps1 -InputPath ".\Right wrist\0000007_Quick_ID___20250926_170446.mp4"</code>
+              When browser decoding fails, frame extraction now falls back to client-side <code>ffmpeg.wasm</code> automatically.<br />
+              For very large MP4 files, browser-ready H.264 MP4 still gives better performance than software fallback.
             </div>
           </div>
         </section>
@@ -230,6 +228,7 @@
   <div id="contextMenu" class="context-menu" style="display: none;">
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
