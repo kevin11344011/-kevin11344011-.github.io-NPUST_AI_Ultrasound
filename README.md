@@ -1,4 +1,4 @@
-# GitHub Pages Annotation Tool V1
+# Annotation Tool V1
 
 ## 功能
 - 選擇本機影像資料夾
